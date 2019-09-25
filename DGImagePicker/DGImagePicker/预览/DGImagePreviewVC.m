@@ -7,181 +7,15 @@
 //
 
 #import "DGImagePreviewVC.h"
+//view
 #import "DGToast.h"
-#import "DGIP_Header.h"
 #import "DGCheckmarkView.h"
-
-static const float maxScale = 3.0;
-static const float minScale = 0.5;
-
-@interface DGZoomScrollView : UIScrollView <UIScrollViewDelegate>
-@property (nonatomic,weak) UIImageView *imageView;
-@property (nonatomic,assign)CGFloat currentScale;
-@end
-
-@implementation DGZoomScrollView
-
--(instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.backgroundColor = [UIColor blackColor];
-        self.delegate = self;
-        self.showsVerticalScrollIndicator = NO;
-        self.showsHorizontalScrollIndicator = NO;
-        self.minimumZoomScale = minScale;
-        self.maximumZoomScale = maxScale;
-
-        [self setupImageView];
-    }
-    return self;
-}
-
--(void)setupImageView {
-    //1.imageV
-    UIImageView *imageV = [[UIImageView alloc] init];
-    self.imageView = imageV;
-    [self addSubview:imageV];
-    
-    imageV.backgroundColor = [UIColor clearColor];
-    imageV.contentMode = UIViewContentModeScaleAspectFit;
-    imageV.userInteractionEnabled = YES;
-    
-    //2.双击
-    UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(doubleTapImageView:)];
-    doubleTap.numberOfTapsRequired = 2;
-    doubleTap.numberOfTouchesRequired = 1;
-    self.currentScale = 1.0;
-    [self.imageView addGestureRecognizer:doubleTap];
-    
-    //3.添加长按手势
-    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(longPress:)];
-    longPress.minimumPressDuration = 1.0;
-    [self.imageView addGestureRecognizer:longPress];
-}
-
--(void)doubleTapImageView:(UITapGestureRecognizer *)gr{
-    
-    if (self.currentScale == 1.0) {
-        self.currentScale = maxScale;
-        [self setZoomScale:maxScale animated:YES];
-    }else{
-        self.currentScale = 1.0;
-        [self setZoomScale:1.0 animated:YES];
-    }
-}
-
--(void)longPress:(UILongPressGestureRecognizer *)gr{
-    //1.创建AlertController
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message: @"保存图片到本地相册" preferredStyle:UIAlertControllerStyleAlert];
-    
-    //2.创建界面上的按钮
-    UIAlertAction *actionYes = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-        
-        UIImageWriteToSavedPhotosAlbum(self.imageView.image, self, @selector(image:didFinishSavingWithError:contextInfo:), (__bridge void *)self);
-    }];
-    
-    UIAlertAction *actionCancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-    }];
-    [actionCancel setValue:[UIColor darkGrayColor] forKey:@"titleTextColor"];
-    
-    [alert addAction:actionCancel];
-    [alert addAction:actionYes];
-    
-    //3.设置message字体样式
-    NSMutableAttributedString *alertTitleStr = [[NSMutableAttributedString alloc] initWithString:alert.message];
-    [alertTitleStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:17] range:NSMakeRange(0, alert.message.length)];
-    [alert setValue:alertTitleStr forKey:@"attributedMessage"];
-    
-    //3.显示AlertController
-    UIViewController *vc = [self currentVC];
-    [vc presentViewController:alert animated:YES completion:nil];
-}
-
-/** 获取ViewController */
-- (UIViewController*)currentVC {
-    for (UIView* nextV = self.superview; nextV; nextV = nextV.superview) {
-        
-        UIResponder* nextResponder = [nextV nextResponder];
-        if ([nextResponder isKindOfClass:[UIViewController class]]) {
-            return (UIViewController*)nextResponder;
-        }
-    }
-    return nil;
-}
-
--(void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo{
-    
-    if (!error) {
-        [DGToast showMsg:@"保存成功" duration:2.0];
-    }else{
-        [DGToast showMsg:@"保存失败" duration:2.0];
-    }
-}
-
-#pragma mark delegate
--(void)scrollViewDidScroll:(UIScrollView *)scrollView {
-}
-
--(UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
-    return self.imageView;
-}
-
--(void)scrollViewDidZoom:(UIScrollView *)aScrollView {
-    CGFloat offsetX = (aScrollView.bounds.size.width > aScrollView.contentSize.width) ? (aScrollView.bounds.size.width - aScrollView.contentSize.width) * 0.5 : 0.0;
-    CGFloat offsetY = (aScrollView.bounds.size.height > aScrollView.contentSize.height) ? (aScrollView.bounds.size.height - aScrollView.contentSize.height) * 0.5 : 0.0;
-    self.imageView.center = CGPointMake(aScrollView.contentSize.width * 0.5 + offsetX,
-                                        aScrollView.contentSize.height * 0.5 + offsetY);
-}
-
-@end
+#import "DGImagePreviewCollectionCell.h"
+//tool
+#import "DGIP_Header.h"
 
 
-
-
-#pragma mark - CollectionCell
 static NSString *const cellId = @"DGImagePreviewCollectionCell";
-
-@interface DGImagePreviewCollectionCell : UICollectionViewCell
-
-@property (nonatomic,weak)DGZoomScrollView *imageScrollView;
-@property (nonatomic,strong) UIImage *img;
-
-@end
-
-@implementation DGImagePreviewCollectionCell
-
--(instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        [self setupImageScrollView];
-    }
-    return self;
-}
-
--(void)setupImageScrollView {
-    DGZoomScrollView *imageScrollView = [[DGZoomScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth([[UIScreen mainScreen] bounds]), CGRectGetHeight(self.frame))];
-    self.imageScrollView = imageScrollView;
-    [self.contentView addSubview:imageScrollView];
-}
-
-
--(void)setImg:(UIImage *)img {
-    _img = img;
-    
-    self.imageScrollView.imageView.image = img;
-    CGFloat scale = img.size.height / img.size.width;
-    
-    CGFloat height = MIN(scale * CGRectGetWidth(self.imageScrollView.bounds), CGRectGetHeight(self.imageScrollView.bounds));
-    CGRect frame = CGRectMake(0, 0, CGRectGetWidth(self.imageScrollView.bounds), height);
-    
-    self.imageScrollView.imageView.bounds = frame;
-    self.imageScrollView.imageView.center = self.imageScrollView.center;
-    self.imageScrollView.contentSize = frame.size;
-}
-
-@end
-
-
 
 #pragma mark - DGImagePreviewVC
 @interface DGImagePreviewVC () <UICollectionViewDelegate, UICollectionViewDataSource>
@@ -209,6 +43,8 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
 
 
 @implementation DGImagePreviewVC
+
+#pragma mark  - getter/setter
 #pragma mark  lazy load
 -(UILabel *)indexLabel {
     if (_indexLabel == nil) {
@@ -226,7 +62,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
     if (_selectButton == nil) {
         _selectButton = [[UIButton alloc]init];
         [_selectButton setImage:[DGCheckmarkView imageForDefault] forState:(UIControlStateNormal)];
-        [_selectButton setImage:[DGCheckmarkView imageForSelected:DGIP_COLOR_NAVI] forState:(UIControlStateSelected)];
+        [_selectButton setImage:[DGCheckmarkView imageForSelected:DGIP_COLOR_CHECK_MARK_BG] forState:(UIControlStateSelected)];
         [_selectButton addTarget:self action:@selector(clickSelectedButton:) forControlEvents:UIControlEventTouchUpInside];
     }
     
@@ -241,14 +77,36 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
         [_confrimButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         _confrimButton.titleLabel.font = [UIFont systemFontOfSize:16];
         [_confrimButton setTitle:@"完成" forState:UIControlStateNormal];
-        [_confrimButton setBackgroundImage:[UIImage imageNamed:@"dgip_blueBg"] forState:UIControlStateNormal];
+        [_confrimButton setBackgroundImage:[DGIPConfig dgipBundleImage:@"dgip_blueBg"] forState:UIControlStateNormal];
         [_confrimButton addTarget:self action:@selector(clickConfirmButton:) forControlEvents:UIControlEventTouchUpInside];
     }
     
     return _confrimButton;
 }
 
-#pragma mark  life circle
+
+#pragma mark  setter
+- (void)setAssetArray:(NSArray *)assetArray {
+    _assetArray = [assetArray copy];
+    [self.confrimButton setTitle:[NSString stringWithFormat:@"完成(%zd)", assetArray.count] forState:UIControlStateNormal];
+    _selectCount = assetArray.count;
+}
+
+- (void)setCurrentIndex:(NSInteger)currentIndex {
+    _currentIndex = currentIndex;
+    
+    //1.改变index
+    NSInteger totalCount = self.isAssetPreview ? self.assetArray.count : self.imageArr.count;
+    self.indexLabel.text = [NSString stringWithFormat:@"%zd/%zd", self.currentIndex + 1, totalCount];
+    
+    //2.改变选中状态
+    if (self.isAssetPreview) {
+        ALAsset *model = [self.assetArray objectAtIndex:currentIndex];
+        self.selectButton.selected = model.isSelected;
+    }
+}
+
+#pragma mark  - life circle
 -(instancetype)init {
     self = [super init];
     if (self) {
@@ -279,7 +137,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
     self.navigationController.navigationBarHidden = NO;
 }
 
-#pragma mark  statusBar
+#pragma mark  - statusBar
 -(BOOL)shouldAutorotate {
     return NO;
 }
@@ -289,7 +147,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
 }
 
 
-#pragma mark  UI
+#pragma mark  - UI
 -(void)setupUI {
     [self setupCollectionView];
     [self setupTopView];
@@ -341,7 +199,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
     
     //3.backBtn
     UIButton *backBtn = [[UIButton alloc]initWithFrame:CGRectMake(10, DGIP_STATUS_BAR_HEIGHT, 40, DGIP_NAVI_BAR_HEIGHT)];
-    [backBtn setImage:[UIImage imageNamed:@"dgip_navi_back"] forState:(UIControlStateNormal)];
+    [backBtn setImage:[DGIPConfig dgipBundleImage:@"dgip_navi_back"] forState:(UIControlStateNormal)];
     [backBtn addTarget:self action:@selector(clickBackButton:) forControlEvents:UIControlEventTouchUpInside];
     [topV addSubview:backBtn];
 
@@ -373,7 +231,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
     [bottomV addSubview:self.confrimButton];
 }
 
-#pragma mark  interaction
+#pragma mark  - interaction
 /** 点击返回按钮 */
 - (void)clickBackButton:(UIButton *)sender {
     if (self.navigationController.viewControllers.count > 1) {
@@ -385,59 +243,40 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
 
 /** 点击选中按钮 */
 - (void)clickSelectedButton:(UIButton *)sender {
-    
+
     ALAsset *currentAsset = self.assetArray[self.currentIndex];
-    currentAsset.isSelected = !currentAsset.isSelected;
-
-    DGIP_WeakS(weakSelf);
-    [ALAsset getorignalImage:currentAsset completion:^(UIImage *image) {
-
-        NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
-//        NSInteger length = imageData.length;
-
-        if (imageData.length / (1024.0 * 1024.0) > 5.0) {
-            [DGToast showMsg:@"图片大于5M" duration:2.0];
-            
-        } else {
-            sender.selected = !sender.selected;
-
-            weakSelf.selectCount += sender.selected ? 1 : (-1);
-
-            if (weakSelf.selectBlock) {
-                weakSelf.selectBlock([weakSelf.assetArray objectAtIndex:weakSelf.currentIndex], sender.selected);
-            }
-            
-            [weakSelf.confrimButton setTitle:[NSString stringWithFormat:@"完成(%zd)", weakSelf.selectCount] forState:UIControlStateNormal];
-        }
-
-    }];
+    
+    //1.改变选中状态
+    sender.selected = !sender.selected;
+    currentAsset.isSelected = sender.isSelected;
+    
+    //2. 改变选中数量
+    self.selectCount += sender.selected ? 1 : (-1);
+    [self.confrimButton setTitle:[NSString stringWithFormat:@"完成(%zd)", self.selectCount] forState:UIControlStateNormal];
+    
+    //3.回传 当前图片的选中状态
+    
+    if (self.selectBlock) {
+        self.selectBlock(currentAsset, sender.selected);
+    }
+    
 }
 
 /** 点击确认按钮 */
 - (void)clickConfirmButton:(UIButton *)sender {
-    
-    //1.处理图片
-    NSMutableArray *imgArray = [[NSMutableArray alloc] init];
-    for (int i = 0; i < [self.assetArray count]; i++) {
-        ALAsset *asset = self.assetArray[i];
-
-        if(asset.isSelected){
-            [ALAsset getorignalImage:asset completion:^(UIImage *image) {
-                [imgArray addObject:image];
-            }];
-        }
-    }
-    
-    //2.调block
+    //调block
     self.finishBlock();
 }
 
-#pragma mark  delegate
+#pragma mark  - delegate
+#pragma mark  collectionView delegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    //1.是AssetPreview
     if (self.isAssetPreview) {
         return self.assetArray.count;
     }
     
+    //2.仅预览图片
     return self.imageArr.count;
 }
 
@@ -458,7 +297,7 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
         return cell;
     }
     
-    //3.单纯查看照片
+    //3.仅预览图片
     cell.img = self.imageArr[row];
     return cell;
 }
@@ -481,28 +320,8 @@ static NSString *const cellId = @"DGImagePreviewCollectionCell";
     self.currentIndex = index;
 }
 
-#pragma mark  setter
-- (void)setAssetArray:(NSArray *)assetArray {
-    _assetArray = assetArray;
-    [self.confrimButton setTitle:[NSString stringWithFormat:@"完成(%zd)", assetArray.count] forState:UIControlStateNormal];
-    _selectCount = assetArray.count;
-}
 
-- (void)setCurrentIndex:(NSInteger)currentIndex {
-    _currentIndex = currentIndex;
-    
-    //1.改变index
-    NSInteger totalCount = self.isAssetPreview ? self.assetArray.count : self.imageArr.count;
-    self.indexLabel.text = [NSString stringWithFormat:@"%zd/%zd", self.currentIndex + 1, totalCount];
-    
-    //2.改变选中状态
-    if (self.isAssetPreview) {
-        ALAsset *model = [self.assetArray objectAtIndex:currentIndex];
-        self.selectButton.selected = model.isSelected;
-    }
-}
-
-#pragma mark 进预览图片
+#pragma mark - 仅预览图片
 -(void)setPreviewImages:(NSArray<UIImage *> *)imageArr defaultIndex:(NSUInteger)defaultIndex{
     self.imageArr = imageArr;
     self.currentIndex = imageArr.count > defaultIndex ? defaultIndex : 0;

@@ -101,7 +101,7 @@
     self.navigationItem.title = @"裁切";
     
     //2.left
-    UIImage *leftImg = [UIImage imageNamed:@"dgip_navi_back"];
+    UIImage *leftImg = [DGIPConfig dgipBundleImage:@"dgip_navi_back"];
     UIBarButtonItem *leftItem = [[UIBarButtonItem alloc]initWithImage:leftImg style:UIBarButtonItemStylePlain target:self action:@selector(clickNaviBackItem:)];
     self.navigationItem.leftBarButtonItem = leftItem;
     

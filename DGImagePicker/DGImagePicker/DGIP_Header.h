@@ -9,15 +9,18 @@
 #ifndef DGIP_Header_h
 #define DGIP_Header_h
 
-
+#import "DGIPConfig.h"
 //---------------------------------------------------
 #pragma mark - color
 /** rgb颜色*/
 #define DGIP_RGBA(r,g,b,a) [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:a]
 #define DGIP_RGB(r,g,b)    DGIP_RGBA(r,g,b,1.0f)
 
+//若要改变UI控件的颜色, 改变这里的宏定义对应的颜色即可,
+//宏定义的名称不能改
 #define DGIP_COLOR_NAVI     DGIP_RGBA(42, 62, 255, 1)
 #define DGIP_COLOR_GRAY     DGIP_RGBA(202, 203, 204, 1)
+#define DGIP_COLOR_CHECK_MARK_BG     DGIP_RGBA(246, 92, 63, 1)
 
 //---------------------------------------------------
 #pragma mark - 尺寸(宽高)

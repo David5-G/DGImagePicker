@@ -32,8 +32,8 @@
     if(self.isSelected){
         
         //1.填充背景
-        const CGFloat *components = CGColorGetComponents(DGIP_COLOR_NAVI.CGColor);
-        const CGFloat a = CGColorGetAlpha(DGIP_COLOR_NAVI.CGColor);
+        const CGFloat *components = CGColorGetComponents(DGIP_COLOR_CHECK_MARK_BG.CGColor);
+        const CGFloat a = CGColorGetAlpha(DGIP_COLOR_CHECK_MARK_BG.CGColor);
         
         CGContextSetRGBFillColor(context, components[0], components[1], components[2], a);
         CGContextFillEllipseInRect(context, self.bounds);

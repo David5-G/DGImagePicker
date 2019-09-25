@@ -41,7 +41,7 @@
 - (UIImageView *)cameraImage {
     if (_cameraImage == nil) {
         _cameraImage = [[UIImageView alloc] initWithFrame:self.bounds];
-        _cameraImage.image = [UIImage imageNamed:@"dgip_camera.png"];
+        _cameraImage.image = [DGIPConfig dgipBundleImage:@"dgip_camera"];
         _cameraImage.contentMode = UIViewContentModeScaleAspectFit;
     }
     return _cameraImage;
@@ -137,8 +137,8 @@ static NSString *const kCameraCellIdentifier = @"CameraCellId";
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
+    [self updatePreviewButtonStatusAndConfirmButtonTitle];
     [self.collectionView reloadData];
-    [self.confirmButton setTitle:[NSString stringWithFormat:@"完成(%zd)", self.selectedAssetArr.count] forState:UIControlStateNormal];
 }
 
 #pragma mark - setter
@@ -224,8 +224,8 @@ static NSString *const kCameraCellIdentifier = @"CameraCellId";
     UIFont *titleFont = [UIFont systemFontOfSize:18];
     titleBtn.titleLabel.font = titleFont;
     titleBtn.selected = NO;
-    [titleBtn setImage:[UIImage imageNamed:@"dgip_navi_down"] forState:UIControlStateNormal];
-    [titleBtn setImage:[UIImage imageNamed:@"dgip_navi_up"] forState:UIControlStateSelected];
+    [titleBtn setImage:[DGIPConfig dgipBundleImage:@"dgip_navi_down"] forState:UIControlStateNormal];
+    [titleBtn setImage:[DGIPConfig dgipBundleImage:@"dgip_navi_up"] forState:UIControlStateSelected];
     [titleBtn setTitleColor:naviTintColor forState:UIControlStateNormal];
     NSString *title = [self.assetsGroup valueForProperty:ALAssetsGroupPropertyName];
     [self updataNaviTitle:title];
@@ -245,7 +245,7 @@ static NSString *const kCameraCellIdentifier = @"CameraCellId";
     
     //3.back
     UIButton *backBtn = [[UIButton alloc]init];
-    [backBtn setImage:[UIImage imageNamed:@"dgip_navi_back_black"] forState:UIControlStateNormal];
+    [backBtn setImage:[DGIPConfig dgipBundleImage:@"dgip_navi_back_black"] forState:UIControlStateNormal];
     backBtn.frame = CGRectMake(0, 0, 30, 30);
     backBtn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
     [backBtn addTarget:self action:@selector(clickNaviCancelItem:) forControlEvents:(UIControlEventTouchUpInside)];
@@ -263,7 +263,7 @@ static NSString *const kCameraCellIdentifier = @"CameraCellId";
     
     //2.改frame和EdgeInsets
     NSDictionary *dic = @{NSFontAttributeName: [UIFont systemFontOfSize:18]};
-    CGFloat indicatorImgW = [UIImage imageNamed:@"dgip_navi_up"].size.width+2;
+    CGFloat indicatorImgW = [DGIPConfig dgipBundleImage:@"dgip_navi_up"].size.width+2;
     CGFloat titleW = [title boundingRectWithSize:CGSizeMake(200, 24) options:NSStringDrawingUsesLineFragmentOrigin attributes:dic context:nil].size.width;
     
     self.naviTitleItem.frame = CGRectMake(0, 0, titleW+indicatorImgW, 30);

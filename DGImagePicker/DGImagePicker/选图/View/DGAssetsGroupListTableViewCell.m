@@ -36,7 +36,7 @@
     if (_selectBtn == nil) {
         _selectBtn = [[UIButton alloc]init];
         _selectBtn.userInteractionEnabled = NO;
-        [_selectBtn setBackgroundImage:[DGCheckmarkView checkmarkImage:DGIP_COLOR_NAVI] forState:UIControlStateNormal];
+        [_selectBtn setBackgroundImage:[DGCheckmarkView checkmarkImage:DGIP_COLOR_CHECK_MARK_BG] forState:UIControlStateNormal];
     }
     return _selectBtn;
 }
